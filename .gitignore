@@ -1,0 +1,17 @@
+# Simulink Coder build artifacts
+slprj/
+*_ert_rtw/
+*_grt_rtw/
+*_rtw/
+*_sfprj/
+*_mex.mex*     # platform-specific MEX files
+*.mk           # generated makefiles
+*.bat          # generated batch files
+*.log
+*.mex*
+*.tlcX         # intermediate TLC output
+
+# Generated code binaries
+*.elf
+*.bin
+*.hex
