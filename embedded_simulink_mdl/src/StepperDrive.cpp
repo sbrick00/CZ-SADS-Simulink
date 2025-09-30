@@ -3,6 +3,8 @@
 #include "board.h"
 #include "xbus.h"
 
+# --------------- CURRENTLY UNUSED ------------------------
+
 static char toggleState1;
 static char toggleState2;
 int currentPos1;

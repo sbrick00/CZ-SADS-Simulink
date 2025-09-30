@@ -1,3 +1,4 @@
+% Ensure port matches the COM used on MobaExterm
 port = "COM11";  baud = 9600;
 s    = serialport(port, baud);
 flush(s);
@@ -60,12 +61,14 @@ fprintf('Saved %d frames to %s\n', frameCount, filename);
 clear s                                           % closes the port
 delete(hFig)
 
+
+
 %% Plot data and visually inspect for a good starting point
 clc
 clear
-raw_data_dir = 'serial_03-Jun-2025.mat';
+% change this the data that was just collected
+raw_data_dir = 'serial_03-Jun-2025.mat'; 
 load(raw_data_dir)
-% load('serial_23-May-2025.mat')
 
 sampleTime = 1/sampleRate;
 
@@ -80,7 +83,7 @@ wheel_trq = zeros(numFrames,1);
 
 
 % unpacking data...
-for i = 1:numFrames % <---  REMEMBER TO INCLUDE/NOT INCLUDE RW WHEEL DATA HERE!!
+for i = 1:numFrames 
     currentFrame = capturedFrames(:,i)';
     
     roll = typecast(currentFrame(2:5),'single');
@@ -93,9 +96,6 @@ for i = 1:numFrames % <---  REMEMBER TO INCLUDE/NOT INCLUDE RW WHEEL DATA HERE!!
     
     pos_x = typecast(currentFrame(26:29),'int32');
     pos_y = typecast(currentFrame(30:33),'int32');
-
-    % wheel_vel(i) = typecast(currentFrame(34:37),'int32');
-    % wheel_trq(i) = typecast(currentFrame(38:39),'int16');
 
     eulerAngles(i,:) = [roll pitch yaw];
     bodyRates(i,:) = [omega_x omega_y omega_z];
@@ -136,8 +136,7 @@ ylabel("Reaction Wheel speed")
 
 clc
 
-% MAKE SURE TO SET THE CORRECT FILE IN SIMULINK AS WELL
-name = 'placeholder';
+name = 'data_for_UKF_placeholder_name';
 t_start = 0; % <------ set a proper cutoff point
 start_index = find(t > t_start,1,'first');
 
@@ -160,12 +159,13 @@ save(strcat('export_for_simulink/',name),'output')
 
 %% 4-state UKF used in the second phase of the hybrid balancing scheme for balancing the r z component.
 
-
 data_path = 'export_for_simulink/May_27_UKF_4.mat';
+t_final = 35;
+
+% -------------------------------------------------------------------
 load(data_path)
 data_path = fullfile(pwd,data_path);
 set_param('SADS_UKF/From File', 'FileName', data_path);  
-t_final = size(output,1)*10;
 
 % EKF Hyperparameters
 n = 8;
@@ -237,20 +237,3 @@ plot(out.sigma_r_z.time,squeeze(out.sigma_r_z.signals.values),'LineWidth',1.5)
 grid on
 xlabel('Time [s]')
 title('r_z Covariance')
-
-ball_screw_wt = 0.177;
-plate_wt = 0.236;
-
-vertical_mass = ball_screw_wt + 2*plate_wt;
-num_rot = r_to_rotations(0.0001,vertical_mass,num_sliders,m_s)';
-
-
-function num_rot = r_to_rotations(r_z,sliderWeight,total_mass)
-    screw_pitch = 0.010;      % mm / rev   (== 0.010 mm per rev)
-
-    % How far the slider itself must move
-    delta_z = (r_z * total_mass) / sliderWeight;
-
-    % Revolutions required
-    num_rot = delta_z / screw_pitch;
-end

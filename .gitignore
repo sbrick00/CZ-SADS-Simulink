@@ -10,7 +10,7 @@ slprj/
 *.log
 *.mex*
 *.tlcX         # intermediate TLC output
-
+*.slxc
 # Generated code binaries
 *.elf
 *.bin
