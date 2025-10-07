@@ -1,6 +1,8 @@
 clc
 clear
 
+addpath("sim_helpers\")
+
 % SADS Values
 m_s = 29; % [kg]
 J_0 = [1.815  -0.014 0.004;
@@ -9,8 +11,8 @@ J_0 = [1.815  -0.014 0.004;
 
 % r_0 = [4*10^-3, 2*10^-3 ,-2*10^-2]'; % solveable condition (displaced battery)
 % r_0 = [0.1*10^-3, 0.1*10^-3 ,-1*10^-3]'; % simple rocking motion
-r_0 = [0, 0, -2*10^-3]'; % purely vertical
-% r_0 = [0 0 0]'; % no inbalance
+% r_0 = [0, 0, -2*10^-3]'; % purely vertical
+r_0 = [0 0 0]'; % no inbalance
 
 omega_0 = [0 0.00 0.06]'; % slight spin, helps with stability
 % omega_0 = [0 0.00 0.00]';
@@ -39,23 +41,35 @@ T_s = 0.01;
 process_PSD = (process_variance^2)*T_s;
 
 % for simulating IMU
-noise_power = 5.235988e-5; % [rad/s/sqrt(Hz)] provided on sensor datasheet
-sensor_PSD = noise_power^2; % IMU power spectral density
+gyro_noise_power = 5.235988e-5; % [rad/s/sqrt(Hz)] provided on sensor datasheet
+gyro_PSD = gyro_noise_power^2; % IMU power spectral density
+gyro_bias_instability = (pi/180)*(6/3600); % [rad/s] provided on datasheet
+
+accel_noise_power = 9.8*(70e-6); % [m/s^2/sqrt(Hz)]
+accel_PSD = accel_noise_power^2;
+accel_bias_instability = 9.8*40e-6; % [(m/s)/s]
 sample_rate = 10; % IMU sample rate
 sample_time = 1/sample_rate; % IMU sample period
-bias_stability = (pi/180)*(6/3600);
+
+r_imu_b = [0.1524, 0, 0.1524];
 
 % for UKF
 % Filter matrices
-R = diag([0.005 0.005 0.005].^2);      % measurement-noise covariance
-H = [eye(3)  zeros(3,5)];             % measurement matrix
-Q  = diag([5e-5 5e-5 5e-5 4e-11 4e-11 4e-11 4e-11 5e-13]);
-omega_0_init = [0 0 0]';
-q_0_init = [1 0 0 0]';
-x_0 = [omega_0_init; q_0_init; -0.001];
-n = size(x_0,1);
-P_0 = diag([1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6]);
+% R = diag([0.005 0.005 0.005].^2);      % measurement-noise covariance
+% H = [eye(3)  zeros(3,5)];             % measurement matrix
+% Q  = diag([5e-5 5e-5 5e-5 4e-11 4e-11 4e-11 4e-11 5e-13]);
+% omega_0_init = [0 0 0]';
+% q_0_init = [1 0 0 0]';
+% x_0 = [omega_0_init; q_0_init; -0.02];
+% n = size(x_0,1);
+% P_0 = diag([1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6]);
 
+% for EKF
+Q  = diag([5e-5 5e-5 5e-5 4e-11 4e-11 4e-11 4e-11]);
+L = [sample_time*(J_0\eye(3)), zeros(3,4);
+     zeros(4,3),               zeros(4,4)];
+P_0 = diag([1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6]);
+R = diag([0.005 0.005 0.005].^2);
 
 t_sim = 100;
 %%
