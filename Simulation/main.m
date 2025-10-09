@@ -9,10 +9,10 @@ J_0 = [1.815  -0.014 0.004;
       -0.014  1.348  0.008;
        0.004  0.008 1.475];
 
-% r_0 = [4*10^-3, 2*10^-3 ,-2*10^-2]'; % solveable condition (displaced battery)
+r_0 = [4*10^-3, 2*10^-3 ,-2*10^-2]'; % solveable condition (displaced battery)
 % r_0 = [0.1*10^-3, 0.1*10^-3 ,-1*10^-3]'; % simple rocking motion
 % r_0 = [0, 0, -2*10^-3]'; % purely vertical
-r_0 = [0 0 0]'; % no inbalance
+% r_0 = [0 0 0]'; % no inbalance
 
 omega_0 = [0 0.00 0.06]'; % slight spin, helps with stability
 % omega_0 = [0 0.00 0.00]';
@@ -29,9 +29,9 @@ g_N = [0 0 -9.81];
 
 % idea 1: higher gain scale, all gains similar
 gainScale = 0.5;
-K_omega = gainScale*1;
-K_q = gainScale*1;
-K_I = gainScale*5;
+K_omega = gainScale*0.6;
+K_q = gainScale*0.1;
+K_I = gainScale*2;
 
 % for simulating plant ("truth")
 process_variance = 1e-5; % variance of disturbance torques
@@ -48,7 +48,7 @@ gyro_bias_instability = (pi/180)*(6/3600); % [rad/s] provided on datasheet
 accel_noise_power = 9.8*(70e-6); % [m/s^2/sqrt(Hz)]
 accel_PSD = accel_noise_power^2;
 accel_bias_instability = 9.8*40e-6; % [(m/s)/s]
-sample_rate = 10; % IMU sample rate
+sample_rate = 50; % IMU sample rate
 sample_time = 1/sample_rate; % IMU sample period
 
 r_imu_b = [0.1524, 0, 0.1524];
@@ -70,6 +70,7 @@ L = [sample_time*(J_0\eye(3)), zeros(3,4);
      zeros(4,3),               zeros(4,4)];
 P_0 = diag([1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6]);
 R = diag([0.005 0.005 0.005].^2);
+x_0 = [0 0 0, 1 0 0 0]';
 
 t_sim = 100;
 %%
