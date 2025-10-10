@@ -9,16 +9,16 @@ J_0 = [1.815  -0.014 0.004;
       -0.014  1.348  0.008;
        0.004  0.008 1.475];
 
-r_0 = [4*10^-3, 2*10^-3 ,-2*10^-2]'; % solveable condition (displaced battery)
+r_0 = [2*10^-3, 2*10^-3 ,-2*10^-2]'; % solveable condition (displaced battery)
 % r_0 = [0.1*10^-3, 0.1*10^-3 ,-1*10^-3]'; % simple rocking motion
 % r_0 = [0, 0, -2*10^-3]'; % purely vertical
 % r_0 = [0 0 0]'; % no inbalance
 
-omega_0 = [0 0.00 0.06]'; % slight spin, helps with stability
+omega_0 = [-0.07 0.1 0.06]'; % slight spin, helps with stability
 % omega_0 = [0 0.00 0.00]';
 
 % EA_0 = deg2rad([1 0 45]'); 
-EA_0 = deg2rad([-8, 15, 0]');
+EA_0 = deg2rad([-20 ,20, 0]');
 q_0 = eul2quat(EA_0',"XYZ")'; 
 q_d = [1 0 0 0]';
 q_e_0 = quatmultiply(q_d',q_0');
@@ -40,21 +40,23 @@ process_variance = 1e-5; % variance of disturbance torques
 T_s = 0.01; 
 process_PSD = (process_variance^2)*T_s;
 
+% Control System
+sample_rate = 50; % IMU sample rate
+sample_time = 1/sample_rate; % IMU sample period
+
 % for simulating IMU
 gyro_noise_power = 5.235988e-5; % [rad/s/sqrt(Hz)] provided on sensor datasheet
 gyro_PSD = gyro_noise_power^2; % IMU power spectral density
 gyro_bias_instability = (pi/180)*(6/3600); % [rad/s] provided on datasheet
+gyro_bias_instability = 0; % [rad/s] provided on datasheet
 
 accel_noise_power = 9.8*(70e-6); % [m/s^2/sqrt(Hz)]
 accel_PSD = accel_noise_power^2;
 accel_bias_instability = 9.8*40e-6; % [(m/s)/s]
-sample_rate = 50; % IMU sample rate
-sample_time = 1/sample_rate; % IMU sample period
 
 r_imu_b = [0.1524, 0, 0.1524];
 
 % for UKF
-% Filter matrices
 % R = diag([0.005 0.005 0.005].^2);      % measurement-noise covariance
 % H = [eye(3)  zeros(3,5)];             % measurement matrix
 % Q  = diag([5e-5 5e-5 5e-5 4e-11 4e-11 4e-11 4e-11 5e-13]);
@@ -72,6 +74,36 @@ P_0 = diag([1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6]);
 R = diag([0.005 0.005 0.005].^2);
 x_0 = [0 0 0, 1 0 0 0]';
 
-t_sim = 100;
+% for reaction wheels
+theta = deg2rad(63); % wheel pyramid elevation angle
+a = cos(theta);
+c = cos(theta);
+b = sin(theta);
+d = sin(theta);
+A = [a -a  0  0;
+     0  0  c -c;
+     b  b  d  d]; % 4x1 wheel torques to 3x1 body torques
+
+A_pinv = pinv(A); 
+I_wheel = 1.698e-3; % kg*m^2
+wheel_setpoint = [10.5 10.5 10.5 10.5]'; % ~ 100 RPM
+A_truth = A;
+
+% For FSFB Controller
+T_s = 8; % [s]
+zeta = 0.8; 
+w_n = 4/(zeta*T_s);
+Kp_FSFB = 2.*(w_n^2).*diag(diag(J_0));
+Kd_FSFB = 2.*zeta.*w_n.*diag(diag(J_0));
+
+% For 3-axis Momentum Tracking
+h_d_phase = [5 18 60];
+h_d_amp = 10*[0.011 0.016 0.013]; % [Nms]
+h_d_period = 4; % [s]
+
+Kappa = 5*diag([1 1 1]);
+Gamma = 0.01*diag([0.005 0.005 0.09] );
+
+t_sim = 60;
 %%
 out = sim('main.slx');
