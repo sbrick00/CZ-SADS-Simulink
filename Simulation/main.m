@@ -11,7 +11,7 @@ J_0 = [1.1  -0.014 0.004;
       -0.014  1.1  0.008;
        0.004  0.008 1.2];
 
-r_0 = 10e-2.*[2*10^-3, 4*10^-3 ,-3*10^-2]'; % solveable condition (displaced battery)
+r_0 = [9*10^-3, 2*10^-3 ,-3*10^-2]'; % solveable condition (displaced battery)
 % r_0 = [0.1*10^-3, 0.1*10^-3 ,-1*10^-3]'; % simple rocking motion
 % r_0 = [0, 0, -2*10^-3]'; % purely vertical
 % r_0 = [0 0 0]'; % no inbalance
@@ -57,7 +57,7 @@ accel_bias_instability = 9.8*40e-6; % [(m/s)/s]
 
 r_imu_b = [0.1524, 0, 0.1524];
 
-% for UKF
+% for UKF ---------------------------------------------------------
 % R = diag([0.005 0.005 0.005].^2);      % measurement-noise covariance
 % H = [eye(3)  zeros(3,5)];             % measurement matrix
 % Q  = diag([5e-5 5e-5 5e-5 4e-11 4e-11 4e-11 4e-11 5e-13]);
@@ -67,7 +67,7 @@ r_imu_b = [0.1524, 0, 0.1524];
 % n = size(x_0,1);
 % P_0 = diag([1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6]);
 
-% for EKF
+% for EKF -----------------------------------------------------------
 Q  = diag([5e-5 5e-5 5e-5 4e-11 4e-11 4e-11 4e-11]);
 L = [sample_time*(J_0\eye(3)), zeros(3,4);
      zeros(4,3),               zeros(4,4)];
@@ -75,7 +75,7 @@ P_0 = diag([1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6]);
 R = diag([0.005 0.005 0.005].^2);
 x_0 = [0 0 0, 1 0 0 0]';
 
-% for reaction wheels
+% for reaction wheels -----------------------------------------------
 theta = deg2rad(63); % wheel pyramid elevation angle
 a = cos(theta);
 c = cos(theta);
@@ -90,14 +90,14 @@ I_wheel = 1.698e-3; % kg*m^2
 wheel_setpoint = [10.5 10.5 10.5 10.5]'; % ~ 100 RPM
 A_truth = A;
 
-% For FSFB Controller
+% For FSFB Controller ------------------------------------------------
 T_s = 8; % [s]
 zeta = 0.8; 
 w_n = 4/(zeta*T_s);
 Kp_FSFB = 2.*(w_n^2).*diag(diag(J_0));
 Kd_FSFB = 2.*zeta.*w_n.*diag(diag(J_0));
 
-% For 3-axis Momentum Tracking
+% For 3-axis Momentum Tracking -----------------------------------------
 h_d_phase = [5 18 60];
 h_d_amp = 10*[0.011 0.016 0.013]; % [Nms]
 h_d_period = [4 4 4]; % [s]
@@ -109,20 +109,23 @@ mot_amp = 100*[0.0011 0.0016 0.0008 0.0013];
 mot_period = [5 7 4 8];
 mot_phase = [5 18 60 98];
 
-% LEAST SQUARES REGRESSION METHOD
+% LEAST SQUARES REGRESSION METHOD ---------------------------------------
 
-h_d_phase = [5 18 60];
-h_d_amp = 2.2*[0.011 0.016 0.013]; % [Nms]
-h_d_period = [12 9 14]; % [s]
+h_d_phase_LSR = [5 18 60];
+h_d_amp_LSR = 2.2*[0.011 0.016 0.013]; % [Nms]
+h_d_period_LSR = [12 9 14]; % [s]
 
-Kappa = 0.05*diag([1 1 1]);
-Gamma = 0.01*diag([0.005 0.005 0.09] );
+Kappa_LSR = 0.05*diag([1 1 1]);
 
 num_tests = 15;
 r_err = zeros(num_tests,3);
-
 J_true = [J_0(1,1),J_0(2,2),J_0(3,3),J_0(1,2),J_0(1,3),J_0(2,3)]';
 
+%{ 
+NOTES FOR LATER
+WHEEL MOTOR + FLYWHEEL MASS = 0.774 kg, total mass is probably ~ 0.825 kg
+WHEEL INERTIA = 0.00088247 kg * m^2
+%}
 %%
 
 % BEGIN TEST LOOP
@@ -131,7 +134,7 @@ disp("Starting test " + j)
 out = sim('main_sim.slx');
 
 t = out.tout;
-use_EKF = 1;
+use_EKF = 0; % use EKF measurements or truth sim data
 if use_EKF == 1
     g_b = squeeze(out.g_b_EKF.signals.values)';
     h_wheels = squeeze(out.h_wheels.signals.values)';
