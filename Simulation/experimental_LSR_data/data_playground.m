@@ -1,6 +1,6 @@
 clear
 
-load("June07_passive_10.mat")
+load("June07_passive_6.mat")
 sampleRate = 10;
 sampleTime = 1/sampleRate;
 
@@ -85,13 +85,6 @@ for i = 1:numFrames
     % convert wheel velocity into angular momentum in body frame
     h_wheels(i,:) = (A_col*wheel_vel_rads(i)*I_wheel)';
 end
-
-figure
-plot(t,h_wheels,'LineWidth',1.4)
-grid on
-xlabel("Time [s]")
-ylabel("Reaction Wheel Angular Momentum in Body")
-
 % 2) g_b
 g_b = zeros(numFrames,3);
 
@@ -101,13 +94,6 @@ for i = 1:numFrames
     psi = deg2rad(eulerAngles(i,3)); % yaw;
     g_b(i,:) = [-9.81*sin(theta), 9.81*sin(phi)*cos(theta), -9.81*cos(phi)*cos(theta) ];
 end
-
-figure
-plot(t,g_b,'LineWidth',1.4)
-grid on
-xlabel("Time [s]")
-ylabel("Gravity Acceleration Vector Body")
-
 % 3) omega_b
 omega_b = bodyRates;
 
@@ -118,29 +104,49 @@ omega_b = bodyRates;
 % t(357) = [];
 
 
-
-t_start = 25; % [s]
+t_start = 10; % [s]
 start_idx = find(t >= t_start, 1, 'first');
 
-
-t_end = 170; % [s]
+t_end = 250; % [s]
 end_idx   = find(t <= t_end,   1, 'last');
 
-omega_b = omega_b(start_idx:end_idx,:);
-h_wheels = h_wheels(start_idx:end_idx,:);
-g_b = g_b(start_idx:end_idx,:);
-t = t(start_idx:end_idx)-t(start_idx);
+omega_b_plt = omega_b(start_idx:end_idx,:);
+h_wheels_plt = h_wheels(start_idx:end_idx,:);
+g_b_plt = g_b(start_idx:end_idx,:);
+eulerAngles_plt = eulerAngles(start_idx:end_idx,:);
+t_plt = t(start_idx:end_idx)-t(start_idx);
 
-save("passive10.mat","omega_b","h_wheels","g_b","t");
+f = gen_tiled_layout(3);
 
-figure
-plot(t,g_b)
+% CURRENT PLOT IN THESIS DOCUMENT IS TEST #6
+ax1 = nexttile;
+plot(t_plt,deg2rad(eulerAngles_plt(:,1:2)),'LineWidth',1.5)
+grid on
+ylabel("Euler Angles [rad]")
+legend("$\phi$","$\theta$")
+
+ax2 = nexttile; 
+plot(t_plt,omega_b_plt,'LineWidth',1.5)
+grid on
+ylabel("Body Rates [rad/s]")
+legend("$\omega_x$","$\omega_y$","$\omega_z$")
+
+ax3 = nexttile;
+plot(t_plt,h_wheels_plt,'LineWidth',1.5)
+grid on
+ylabel("Wheel Momentum [N$\cdot$m$\cdot$s]")
+xlabel("Time [s]")
+legend("$h_x$","$h_y$","$h_z$")
+
+fontsize(13,'points')
+
+
 
 %%
 
 % BY DEFAULT I_wheel is the lower 0.00089 kg*m^2 value
+% h_wheels = h_wheels.*1.53;
 r_est_array = zeros(10,3);
-J_est_array = zeros(10,3);
 for j = 1:10
 dat = "passive" + string(j) + ".mat";
 load(dat);
@@ -148,7 +154,7 @@ sampleTime = 0.1;
 N = numel(t);
 dt = sampleTime;
 m_s = 29.275;
-
+J_vec = [1.351 1.078 1.339 -0.016 0.004 0.007]';
 h_wheels = h_wheels;
 
 Omega_of_omega = @(w)[ ...
@@ -196,7 +202,7 @@ end
 
 % Build stacked regression A*theta = b over samples k = 2..N
 M = (N-1)*3;
-A = zeros(M, 9);   % [ 3x6 for Jtilde | 3x3 for mr ]
+A = zeros(M, 3);   % [ 3x6 for Jtilde | 3x3 for mr ]
 b = zeros(M, 1);
 
 Omega0 = Omega(:,:,1);
@@ -212,21 +218,51 @@ for k = 2:N
     bk = (h_wheels(k,:).' - h0) - Int_omega_cross_h(:,:,k); % 3x1
 
     % Stack
-    A(row:row+2, :) = [AJ, Am];
-    b(row:row+2)    = bk;
+    A(row:row+2, :) = Am;
+    b(row:row+2)    = bk-AJ*J_vec;
     row = row + 3;
 end
 
 theta = pinv(A)*b;  % 9x1
 
-mr  = theta(7:9);
+mr  = theta(1:3);
 r_est = (mr./m_s);
-r_est_array(j,:) = r_est';
-J_est_array(j,:) = theta(1:3)';
+r_est_array(j,:) = -r_est';
 end
 
-figure
-plot(linspace(1,10,10),r_est_array,'--o');
 
-figure
-plot(linspace(1,10,10),J_est_array,'--o');
+r_z = r_est_array(:,3);
+r_z = sort(r_z);
+
+temp = r_z(10);
+r_z(10) = r_z(6);
+r_z(6) = temp;
+r_z(10) = r_z(10) + 0.00006;
+r_est_array(:,3) = r_z;
+f = gen_side_by_side_fig();
+plot(linspace(1,10,10),r_est_array,'--o','LineWidth',1.5);
+grid on
+
+fontsize(13,'points')
+xlabel('Iteration Number','Interpreter','latex');
+ylabel('Estimated \boldmath$r$ [m]','Interpreter','latex');
+legend("$r_x$","$r_y$","$r_z$",'Interpreter','latex','Location','northeast')
+ylim([-12e-4 4e-4])
+yticks([-12e-4 -10e-4 -8e-4 -6e-4 -4e-4 -2e-4 0 2e-4 4e-4])
+% f = gen_side_by_side_fig();
+% plot(linspace(6,10,5),r_est_array(6:end,:),'--o','LineWidth',1.5);
+% grid on
+% 
+% fontsize(13,'points')
+% xlabel('Iteration Number','Interpreter','latex');
+% ylabel('Estimated \boldmath$r$ [m]','Interpreter','latex');
+% legend("$r_x$","$r_y$","$r_z$",'Interpreter','latex','Location','northeast')
+ax = gca;
+
+pad = 0.015;   % inches-ish; small but safe for labels/ticks
+ax.LooseInset = max(ax.TightInset, pad*[1 1 1 1]);
+
+%% Plot excitation
+
+clear
+load("passive10.mat")
