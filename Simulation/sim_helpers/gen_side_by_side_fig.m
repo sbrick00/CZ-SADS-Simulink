@@ -14,6 +14,10 @@ set(groot,'defaultAxesLineStyleOrder',{'-','--',':','-.'});
 W = 5.25; H = 4.25;       % single-column example
 % Create figure at exact size
 figOut = figure('Units','inches','Position',[5 5 W H], 'Color','w');
-
+ax = gca;
+ax.TickLabelInterpreter = 'latex';
+% ax.YAxis.Exponent = -2; 
+pad = 0.015;   % inches-ish; small but safe for labels/ticks
+ax.LooseInset = max(ax.TightInset, pad*[1 1 1 1]);
 end
 

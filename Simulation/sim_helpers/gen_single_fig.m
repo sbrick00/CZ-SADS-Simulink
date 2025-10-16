@@ -1,10 +1,10 @@
-function figOut = gen_tiled_layout(num_tiles)
+function figOut = gen_single_fig()
 set(groot, 'defaultTextInterpreter','latex', ...
            'defaultAxesTickLabelInterpreter','latex', ...
            'defaultLegendInterpreter','latex');
 
 W = 7.5;
-H = 2.9 * num_tiles;
+H = 4.9;
 
 PAL = [ ...
   0.000 0.447 0.741;  % strong blue
