@@ -47,7 +47,10 @@ EA_0 = deg2rad(output(2:4,1));
 % transformations are inertial to body
 % XYZ rotation order must be explicitly specified
 q_0 = eul2quat(EA_0',"XYZ")'; 
-x_0 = [omega_0; q_0; -0.01];
+
+% r_z_0 = -10e-4; % for run 2
+r_z_0 = -0.0001; % for run 4
+x_0 = [omega_0; q_0; r_z_0];
 
 n = size(x_0,1);
 P_0 = diag([1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6]);
@@ -55,20 +58,45 @@ P_0 = diag([1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6]);
 out = sim('SADS_UKF.slx');
 
 disp(squeeze(out.r_z_est.signals.values(end)))
+f = gen_side_by_side_fig();
 
-figure
-subplot(2,1,1)
 yline(0)
 hold on
-plot(out.r_z_est.time,squeeze(out.r_z_est.signals.values),'LineWidth',1.5)
+plot(out.r_z_est.time,squeeze(out.r_z_est.signals.values),'LineWidth',1.8)
+hold on
+plot(out.r_z_est.time, squeeze(out.r_z_est.signals.values) + squeeze(out.sigma_r_z.signals.values),'--','Color',[0.000 0.447 0.741])
+plot(out.r_z_est.time, squeeze(out.r_z_est.signals.values) - squeeze(out.sigma_r_z.signals.values),'--','Color',[0.000 0.447 0.741])
 grid on
 xlabel('Time [s]')
-title('$r_z$ Estimate')
+ylabel('Estimated $r_z$ [m]')
+legend("","Estimated Value","$1\sigma$","Location","southeast")
+fontsize(13,'points')
+exportgraphics(f,'C:\Users\camer\OneDrive\Desktop\CZ_Thesis_Latex\plots\UKF_hardware_failure.pdf','ContentType','vector');        % axes only
 
-subplot(2,1,2)
+r_z = squeeze(out.r_z_est.signals.values);
+sigma = squeeze(out.sigma_r_z.signals.values);
+
+disp("r_z end: " + r_z(end));
+disp("sigma end: " + sigma(end));
+
+%%
+r_z_array = [-2.0928e-03, -6.3928e-04, -3.0928e-04,-1.0928e-04];
+sigma_array = [1.0928e-04, 0.6e-04, -1.0928e-04,-2.0928e-04];
+
+r_z_array_exp = [-2.0928e-03, -6.3928e-04, -3.0928e-04,-1.0928e-04];
+sigma_array_exp = [1.0928e-04, 0.6e-04, -1.0928e-04,-2.0928e-04];
+
+n = length(r_z_array);
+f = gen_single_fig();
+% plot(linspace(1,n,n),r_z_array,'--o','Color',[0.000 0.447 0.741],'LineWidth',1.5);
 yline(0)
 hold on
-plot(out.sigma_r_z.time,squeeze(out.sigma_r_z.signals.values),'LineWidth',1.5)
+errorbar(linspace(1,n,n),r_z_array,sigma_array,'--o','Color',[0.000 0.447 0.741],'LineWidth',1.5)
+xlabel("Iteration Number")
+ylabel("Estimated $r_z\pm1\sigma$ [m]")
 grid on
-xlabel('Time [s]')
-ylabel('$r_z$ Covariance')
+fontsize(13,'points')
+xlim([0 n+1])
+xticks(linspace(0,5,6))
+exportgraphics(f,'C:\Users\camer\OneDrive\Desktop\CZ_Thesis_Latex\plots\UKF_hardware_iterations.pdf','ContentType','vector');        % axes only
+

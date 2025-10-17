@@ -19,5 +19,11 @@ ax.TickLabelInterpreter = 'latex';
 % ax.YAxis.Exponent = -2; 
 pad = 0.015;   % inches-ish; small but safe for labels/ticks
 ax.LooseInset = max(ax.TightInset, pad*[1 1 1 1]);
+
+set(groot, 'defaultTextInterpreter','latex', ...                 % titles, labels, annotations
+           'defaultAxesTickLabelInterpreter','latex', ...        % axis tick labels
+           'defaultLegendInterpreter','latex', ...               % legends
+           'defaultColorbarTickLabelInterpreter','latex');       % colorbars
+
 end
 

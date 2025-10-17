@@ -65,7 +65,6 @@ tiles = tiledlayout(f,3,1,'Padding','compact','TileSpacing','compact');
 ax1 = nexttile;
 plot(t_plt,eulerAngles_plt(:,1:2),'LineWidth',1.5)
 grid on
-xlabel("Time [s]")
 ylabel("Euler Angles [rad]")
 legend("$\phi$","$\theta$")
 xlim([0 70])
@@ -73,7 +72,6 @@ xlim([0 70])
 ax2 = nexttile;
 plot(t_plt,bodyRates_plt,'LineWidth',1.5)
 grid on
-xlabel("Time [s]")
 ylabel("Body Rates [rad/s]")
 legend("$\omega_x$","$\omega_y$")
 xlim([0 70])
@@ -86,3 +84,4 @@ ylabel("Sliding Mass Positions [m]")
 legend("$\Delta\,d_x$","$\Delta\,d_y$")
 fontsize(13,'points')
 xlim([0 70])
+exportgraphics(f,'C:\Users\camer\OneDrive\Desktop\CZ_Thesis_Latex\plots\PID_hardware_results.pdf','ContentType','vector');        % axes only
