@@ -1,5 +1,5 @@
 clc; clear
-load("passive_verification3.mat")
+load("hybrid_verification4.mat")
 % load("manual_balance_tumbling.mat")
 %{
 passive verification 1-3 contain tumbling data after all 10 passive runs,
@@ -53,7 +53,7 @@ end
 figure
 plot(t,eulerAngles)
 
-t_start = 14;
+t_start = 10.6;
 start_idx = find(t > t_start, 1, 'first');
 t_0 = t(start_idx);
 
@@ -69,7 +69,7 @@ for i = 1:n
     KE(i) = (1/2)*omega'*J*omega;
 end
 
-save("passive_KE.mat","KE","t_plt")
+% save("passive_KE.mat","KE","t_plt")
 
 %% SAVE TORQUE
 vel_x = bodyRates_plt(:,1);
@@ -132,7 +132,7 @@ yline(0)
 plot(t_al, torque);
 t_plt = t(start_idx:end)-t_0;
 title("Torque")
-save("passive_torque.mat","t_al","torque_norm")
+% save("passive_torque.mat","t_al","torque_norm")
 
 
 %% PLOT RESUTLS

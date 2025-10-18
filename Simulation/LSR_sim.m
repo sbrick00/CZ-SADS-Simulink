@@ -4,14 +4,15 @@ addpath("sim_helpers\")
 S = setup();            
 
 % optionally overwrite default values
-S.r_0 = 1e-1.*[5*10^-3,6*10^-3 ,-3*10^-2]';
+S.r_0 = 1e-1.*[3*10^-3, 2*10^-3 ,-3*10^-2]';
 S.omega_0 = [0 0 0]';
 S.Kappa_LSR = .005*diag([1 1 1]);
 S.t_sim = 400;
 out = simFromStruct('main_sim',S);
 %% Run Passive Iterations
-num_tests = 10;
-r_err = zeros(num_tests,3);
+num_tests = 20;
+r_true = zeros(num_tests,3);
+r_est_array = zeros(num_tests,3);
 J_0 = S.J_0;
 m_s = S.m_s;
 J_vec = [0.93*J_0(1,1),1.07*J_0(2,2),0.87*J_0(3,3),J_0(1,2),J_0(1,3),J_0(2,3)]';
@@ -22,7 +23,7 @@ disp("Starting test " + j)
 out = simFromStruct('main_sim',S);
 
 t = out.tout;
-use_EKF = 0; % use EKF measurements or truth sim data
+use_EKF = 1; % use EKF measurements or truth sim data
 if use_EKF == 1
     g_b = squeeze(out.g_b_EKF.signals.values)';
     h_wheels = squeeze(out.h_wheels.signals.values)';
@@ -126,31 +127,46 @@ mr  = theta(1:3);
 r_est = (mr./m_s);
 
 
-r_err(j,:) = (r_est)';
+r_est_array(j,:) = (r_est)';
 S.r_0 = S.r_0 - r_est;
+
+r_true(j,:) = S.r_0';
 end % END TEST LOOP -------------------------------------------------
+%%
+sig_x = sqrt(var(r_est_array(4:end,1)));
 %% Plot Results
 
 
-start_test = 6;
-end_test = 10;
+start_test = 5;
+end_test = 20;
 test_plotted = end_test-start_test + 1;
+lin = linspace(start_test,end_test,test_plotted);
 
+% f = gen_side_by_side_fig();
+% plot(linspace(start_test,end_test,test_plotted),-r_est_array(start_test:end_test,:),'--o','LineWidth',1.5)
 
-f = gen_side_by_side_fig();
+f = gen_single_fig(); hold on;
+plot(lin,-r_est_array(start_test:end_test,1),'-o','LineWidth',1.5)
 
-plot(linspace(start_test,end_test,test_plotted),r_err(start_test:end_test,:),'--o','LineWidth',1.5)
+plot(lin,-r_est_array(start_test:end_test,1)+3*sig_x,'--o','LineWidth',1.5,'Color',[0.000 0.447 0.741])
+plot(lin,-r_est_array(start_test:end_test,1)-3*sig_x,'--o','LineWidth',1.5,'Color',[0.000 0.447 0.741])
+
+plot(lin,r_true(start_test:end_test,1) ...
+        ,'-o','LineWidth',1.5,'Color',[0.200 0.200 0.200])
+
 grid on
 
 fontsize(13,'points')
 xlabel('Iteration Number','Interpreter','latex');
-ylabel('Estimated \boldmath$r$ [m]','Interpreter','latex');
-legend("$r_x$","$r_y$","$r_z$",'Interpreter','latex','Location','northeast')
+ylabel('$r_x$ [m]','Interpreter','latex');
+legend("$r_x$ Est.","$r_x$ Est. $\pm3\sigma$","","$r_x$ Truth",'Interpreter','latex','Location','northeast')
 ax = gca;
 ax.TickLabelInterpreter = 'latex';
 
 pad = 0.015;   % inches-ish; small but safe for labels/ticks
 ax.LooseInset = max(ax.TightInset, pad*[1 1 1 1]);
+
+exportgraphics(f,'C:\Users\camer\OneDrive\Desktop\Thesis Latex Source\plots\LSR_sim_confidence.pdf','ContentType','vector');        % axes only
 
 %% Test excitation
 S = setup();            
