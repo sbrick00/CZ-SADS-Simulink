@@ -4,19 +4,20 @@ addpath("sim_helpers\")
 S = setup();            
 
 % optionally overwrite default values
-% S.r_0 = [4*10^-3, 7*10^-3 ,-3*10^-2];
-S.r_0 = [7.2931e-03 9e-04 -3*10^-2];
+%S.r_0 = [4*10^-4, 7*10^-3 ,-3*10^-2];
+% S.r_0 = [7.2931e-03 9e-04 -3*10^-2];
+S.r_0 = [-7.7793e-04, 0.1e-05,-3*10^-1];
 S.t_sim = 80;
 S.omega_0 = [-0.01 0.03 0.06]';
-S.EA_0 = deg2rad([-6 ,7, 0]');
+S.EA_0 = deg2rad([-2 ,1, 0]');
 S.q_0 = eul2quat(S.EA_0',"XYZ")';
 
 del_d_sol_x = -S.r_0(1)*(S.m_s/S.mmu);
 del_d_sol_y = -S.r_0(2)*(S.m_s/S.mmu);
 
-gainScale = 0.5;
+gainScale = 0.1;
 S.K_omega = gainScale*1;
-S.K_q = gainScale*4;
+S.K_q = gainScale*1;
 S.K_I = gainScale*6;
 
 
@@ -27,8 +28,8 @@ disp("Final r_b: ")
 
 disp(final_r_b(:,end))
 
-EA_plt = deg2rad(squeeze(out.EA_degs.signals.values));
-omega_b_plt = squeeze(out.omega_b.signals.values);
+EA_plt = deg2rad(squeeze(out.EA_degs.signals.values))';
+omega_b_plt = squeeze(out.omega_b.signals.values)';
 del_r_plt = squeeze(out.del_r.signals.values);
 t_plt = out.tout;
 

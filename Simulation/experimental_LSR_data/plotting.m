@@ -145,7 +145,7 @@ fontsize(13,'points')
 %%
 
 % BY DEFAULT I_wheel is the lower 0.00089 kg*m^2 value
-% h_wheels = h_wheels.*1.53;
+h_wheels = h_wheels.*1.53;
 r_est_array = zeros(10,3);
 for j = 1:10
 dat = "passive" + string(j) + ".mat";
@@ -153,7 +153,7 @@ load(dat);
 sampleTime = 0.1;
 N = numel(t);
 dt = sampleTime;
-m_s = 29.275;
+m_s = 31;
 J_vec = [1.351 1.078 1.339 -0.016 0.004 0.007]';
 h_wheels = h_wheels;
 
@@ -227,17 +227,17 @@ theta = pinv(A)*b;  % 9x1
 
 mr  = theta(1:3);
 r_est = (mr./m_s);
-r_est_array(j,:) = -r_est';
+r_est_array(j,:) = r_est';
 end
 
 
 r_z = r_est_array(:,3);
-r_z = sort(r_z);
+% r_z = sort(r_z);
 
-temp = r_z(10);
-r_z(10) = r_z(6);
-r_z(6) = temp;
-r_z(10) = r_z(10) + 0.00006;
+% temp = r_z(10);
+% r_z(10) = r_z(6);
+% r_z(6) = temp;
+% r_z(10) = r_z(10) + 0.00006;
 r_est_array(:,3) = r_z;
 f = gen_side_by_side_fig();
 plot(linspace(1,10,10),r_est_array,'--o','LineWidth',1.5);

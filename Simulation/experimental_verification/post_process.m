@@ -51,9 +51,9 @@ end
 
 %% FIND GOOD STARTING POINT AND SAVE KE
 figure
-plot(t,eulerAngles)
+plot(t,eulerAnlgles(:,1:2))
 
-t_start = 10.6;
+t_start = 14;
 start_idx = find(t > t_start, 1, 'first');
 t_0 = t(start_idx);
 
@@ -126,7 +126,7 @@ t_0 = t_al(start_idx);
 
 t_al = t_al(start_idx:end)-t_0;
 torque = torque(start_idx:end,:);
-torque_norm = torque(start_idx:end);
+torque_norm = torque_norm(start_idx:end);
 figure; hold on; grid on
 yline(0)
 plot(t_al, torque);

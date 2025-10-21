@@ -4,7 +4,7 @@ addpath("sim_helpers\")
 S = setup();            
 
 % optionally overwrite default values
-S.r_0 = 1e-1.*[3*10^-3, 2*10^-3 ,-3*10^-2]';
+S.r_0 = [3*10^-3, 2*10^-3 ,-3*10^-2]';
 S.omega_0 = [0 0 0]';
 S.Kappa_LSR = .005*diag([1 1 1]);
 S.t_sim = 400;
@@ -133,7 +133,7 @@ S.r_0 = S.r_0 - r_est;
 r_true(j,:) = S.r_0';
 end % END TEST LOOP -------------------------------------------------
 %%
-sig_x = sqrt(var(r_est_array(4:end,1)));
+sig_x = sqrt(var(r_est_array(5:end,3)));
 %% Plot Results
 
 
@@ -146,10 +146,10 @@ lin = linspace(start_test,end_test,test_plotted);
 % plot(linspace(start_test,end_test,test_plotted),-r_est_array(start_test:end_test,:),'--o','LineWidth',1.5)
 
 f = gen_single_fig(); hold on;
-plot(lin,-r_est_array(start_test:end_test,1),'-o','LineWidth',1.5)
+plot(lin,-r_est_array(start_test:end_test,3),'-o','LineWidth',1.5)
 
-plot(lin,-r_est_array(start_test:end_test,1)+3*sig_x,'--o','LineWidth',1.5,'Color',[0.000 0.447 0.741])
-plot(lin,-r_est_array(start_test:end_test,1)-3*sig_x,'--o','LineWidth',1.5,'Color',[0.000 0.447 0.741])
+plot(lin,-r_est_array(start_test:end_test,3)+3*sig_x,'--o','LineWidth',1.5,'Color',[0.000 0.447 0.741])
+plot(lin,-r_est_array(start_test:end_test,3)-3*sig_x,'--o','LineWidth',1.5,'Color',[0.000 0.447 0.741])
 
 plot(lin,r_true(start_test:end_test,1) ...
         ,'-o','LineWidth',1.5,'Color',[0.200 0.200 0.200])
@@ -166,7 +166,7 @@ ax.TickLabelInterpreter = 'latex';
 pad = 0.015;   % inches-ish; small but safe for labels/ticks
 ax.LooseInset = max(ax.TightInset, pad*[1 1 1 1]);
 
-exportgraphics(f,'C:\Users\camer\OneDrive\Desktop\Thesis Latex Source\plots\LSR_sim_confidence.pdf','ContentType','vector');        % axes only
+exportgraphics(f,'C:\Users\camer\OneDrive\Desktop\CZ_Thesis_Latex\plots\LSR_sim_confidence_1_wheel.pdf','ContentType','vector');        % axes only
 
 %% Test excitation
 S = setup();            
